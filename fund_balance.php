@@ -115,7 +115,7 @@ $ob->getFundPerformace(function ($index) use ($ob, $investorAddress) {
                         if ($entry["timestamp"] < $firstInvestment) {
                             continue;
                         }
-                        if($entry["timestamp"] > $lastInvestment){
+                        if($lastInvestment !== 0 and $entry["timestamp"] > $lastInvestment){
                             break;
                         }
                         echo date("Y-m-d H:i:s", $entry["timestamp"]) . " : " . $entry["value"] . "%\n";
