@@ -1,0 +1,13 @@
+{
+  "name": "ARandomInvestor/amfeix-tools",
+  "minimum-stability": "dev",
+  "autoload": {
+    "psr-4": {
+      "ARandomInvestor\\AMFEIX\\": "src/"
+    }
+  },
+  "require": {
+    "ext-json": "*",
+    "sc0vu/web3.php": "dev-master"
+  }
+}
