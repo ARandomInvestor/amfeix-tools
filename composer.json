@@ -1,5 +1,5 @@
 {
-  "name": "ARandomInvestor/amfeix-tools",
+  "name": "arandominvestor/amfeix-tools",
   "minimum-stability": "dev",
   "autoload": {
     "psr-4": {
