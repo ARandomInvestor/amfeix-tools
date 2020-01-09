@@ -34,4 +34,6 @@ $ob->getFundPerformace(function ($index) {
         $currentMonth += $entry["value"];
         echo date("Y-m-d H:i:s", $entry["timestamp"]) . " : " . $entry["value"] . "%\n";
     }
+    
+    echo "=== Ongoing ".date("Y-m F", $index[$i]["timestamp"]).": Sum of values ".number_format($currentMonth, 2)."% / Compounded growth ".number_format(($currentCompound - 1) * 100, 3)."% ===\n\n";
 });
