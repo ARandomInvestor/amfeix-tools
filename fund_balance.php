@@ -35,7 +35,7 @@ $ob->getFundPerformace(function ($index) use ($ob, $investorAddress) {
         echo "Fetching $num tx\n";
         for ($n = 0; $n < $num; ++$n) {
             $ob->getTx($investorAddress, $n, function ($v) use ($num, $n, &$txs, $index) {
-                echo "Processing BTC tx " . ($v["action"] == 0 ? "IN " : ($v["action"] == 1 ? "OUT" : "UNKNOWN")) . " ".  $v["txid"] ."\n";
+                echo "Processing BTC tx " . ($v["action"] == 0 ? "IN " : ($v["action"] == 1 ? "OUT" : "UNKNOWN")) . " ".  $v["txid"] . " @ " . date("Y-m-d H:i:s", $v["timestamp"]) ."\n";
                 if($v["action"] == 0){
                     $json = json_decode(file_get_contents("https://blockchain.info/rawtx/" . $v["txid"] . "?cors=true"), true);
                     foreach ($json["out"] as $o) {
