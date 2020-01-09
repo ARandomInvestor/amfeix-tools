@@ -7,7 +7,7 @@ use Web3\Web3;
 
 date_default_timezone_set("UTC");
 
-if($argc < 3){
+if($argc < 2){
     echo "Usage: " . escapeshellarg(PHP_BINARY) . " " . escapeshellarg($argv[0]) ." <HTTP Web3 endpoint>\n";
     echo "\t<HTTP Web3 endpoint>: Could be your local node, or a remote one like https://infura.io/\n";
     exit(1);
