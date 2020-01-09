@@ -4,7 +4,7 @@ AMFEIX Tools
 **DISCLAIMER**: This is a community project and is not part of AMFEIX or supported by them. You should NOT use any kind of private key or seeds here. These tools work using public Ethereum network contracts and information, and do not need them.
 
 ## Requirements
-PHP > 7.1 and Composer. Run `$ composer update` to install other dependencies.
+PHP > 7.1 and [Composer](https://getcomposer.org/). Run `$ composer update` to install other dependencies afterwards.
 
 ## Example: fund_balance.php
 ```
