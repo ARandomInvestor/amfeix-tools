@@ -15,6 +15,7 @@ Usage: php fund_balance.php <HTTP Web3 endpoint> <Investor Address>
 
 
 You can call this script to generate a balance for your investor account and list related performances of AMFEIX. You will need your *Investor Address*, which you can find on your browser's developer tools console after logging into AMFEIX portal. It should be outputted as part of the first few lines in the console.
+
 If you don't want to setup a local node, you can get a [free infura.io account](https://infura.io/) (select Core FREE when registering) and run calls against its API.
 ```
 $ php fund_balance.php "https://mainnet.infura.io/v3/YOUR_INFURA_API_KEY" "0x6507dd87a08adbffde9343e65936d93bcdfa95f7"
@@ -50,3 +51,8 @@ CURRENT / Current Initial Investment: BTC 0.00000000 / Current: BTC 0.00000000 /
 2019-06-26 22:14:12 : 2.59%
 2019-06-27 21:04:41 : -0.495%
 ```
+
+### Tips
+Feel like tipping? Why though, this could have been made by anyone. Better invest it back.
+
+If you still feel like it: `3KPEV9dAS7fHEAigkW9TQdNQKPko6cGrbY`
