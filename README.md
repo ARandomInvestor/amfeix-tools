@@ -6,6 +6,21 @@ AMFEIX Tools
 ## Requirements
 PHP > 7.1 and [Composer](https://getcomposer.org/). Run `$ composer update` to install other dependencies afterwards.
 
+### Ethereum request endpoint
+To run calls against the Contract you need either a local Ethereum node (like [geth](https://ethereum.github.io/go-ethereum/), or [parity](https://www.parity.io/)) that can run such queries, or set up a [free infura.io account](https://infura.io/) (select Core FREE when registering) and run calls against its API.
+
+There is also more information on the [web3py info page](https://web3py.readthedocs.io/en/stable/node.html)
+
+
+
+If you end up using a local node, *ETHEREUM_API_NODE_URL* will look something like this `http://localhost:8545`.
+
+
+Otherwise if you use infura.io, you will end up with this *ETHEREUM_API_NODE_URL* after replacing *YOUR_INFURA_API_KEY* with your *PROJECT ID*:  `https://mainnet.infura.io/v3/YOUR_INFURA_API_KEY`
+
+You might have to whitelist contract address `0xb0963da9baef08711583252f5000Df44D4F56925` under project security, which is AMFEIX Storage contract address.
+
+
 ## Example: fund_balance.php
 ```
 Usage: php fund_balance.php <HTTP Web3 endpoint> <Investor Address>
@@ -16,14 +31,8 @@ Usage: php fund_balance.php <HTTP Web3 endpoint> <Investor Address>
 
 You can call this script to generate a balance for your investor account and list related performances of AMFEIX. You will need your *Investor Address*, which you can find on your browser's developer tools console after logging into AMFEIX portal. It should be outputted as part of the first few lines in the console.
 
-If you don't want to setup a local node, you can get a [free infura.io account](https://infura.io/) (select Core FREE when registering) and run calls against its API.
 ```
-$ php fund_balance.php "https://mainnet.infura.io/v3/YOUR_INFURA_API_KEY" "0x6507dd87a08adbffde9343e65936d93bcdfa95f7"
-```
-
-You can also use a local node, like so
-```
-$ php fund_balance.php "http://localhost:8545" "0x6507dd87a08adbffde9343e65936d93bcdfa95f7"
+$ php fund_balance.php "ETHEREUM_API_NODE_URL" "0x6507dd87a08adbffde9343e65936d93bcdfa95f7"
 ```
 
 It will produce an output similar to this
@@ -59,16 +68,10 @@ Usage: php fund_performance.php <HTTP Web3 endpoint>
 	<HTTP Web3 endpoint>: Could be your local node, or a remote one like https://infura.io/
 ```
 
-
 You can call this script to list the performances of AMFEIX. 
-If you don't want to setup a local node, you can get a [free infura.io account](https://infura.io/) (select Core FREE when registering) and run calls against its API.
-```
-$ php fund_performance.php "https://mainnet.infura.io/v3/YOUR_INFURA_API_KEY"
-```
 
-You can also use a local node, like so
 ```
-$ php fund_performance.php "http://localhost:8545"
+$ php fund_performance.php "ETHEREUM_API_NODE_URL"
 ```
 
 It will produce an output similar to this
