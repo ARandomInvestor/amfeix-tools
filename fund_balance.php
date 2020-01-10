@@ -24,105 +24,100 @@ if($investorAddress === ""){
     echo "Please provide an (ETH) Investor Address tied to contract.\n";
     exit(1);
 }
+echo "Acquiring valid Deposit Addresses\n";
+$ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
+  array_map(function($a){echo "Deposit Address: " . $a . "\n";}, $depositAddresses);
 
-echo "Acquiring AMFEIX index\n";
-
-$ob->getFundPerformace(function ($index) use ($ob, $investorAddress) {
+  echo "Acquiring AMFEIX index\n";
+  $ob->getFundPerformace(function ($index) use ($ob, $investorAddress, $depositAddresses) {
     echo "Processing investor $investorAddress\n";
-
-    $ob->getTxCount($investorAddress, function ($num) use ($ob, $investorAddress, $index) {
-        $txs = [];
-        echo "Fetching $num tx\n";
-        for ($n = 0; $n < $num; ++$n) {
-            $ob->getTx($investorAddress, $n, function ($v) use ($num, $n, &$txs, $index) {
-                echo "Processing BTC tx " . ($v["action"] == 0 ? "IN " : ($v["action"] == 1 ? "OUT" : "UNKNOWN")) . " ".  $v["txid"] . " @ " . date("Y-m-d H:i:s", $v["timestamp"]) ."\n";
-                if($v["action"] == 0){
-                    $json = json_decode(file_get_contents("https://blockchain.info/rawtx/" . $v["txid"] . "?cors=true"), true);
-                    foreach ($json["out"] as $o) {
-                        if ($o["addr"] === StorageContract::STORAGE_BITCOIN_WALLET) {
-                            $v["value"] = $o["value"];
-                        }
-                    }
-                    $txs[$v["txid"]] = $v;
-                    $txs[$v["txid"]]["exit_timestamp"] = PHP_INT_MAX;
-                }else if ($v["action"] == 1){
-                    $txs[$v["txid"]]["exit_timestamp"] = $v["timestamp"];
+    $ob->getTxs($investorAddress, function($values) use ($ob, $investorAddress, $depositAddresses, $index){
+      $txs = [];
+      foreach($values as $v){
+        echo "Processing BTC tx " . ($v["action"] == 0 ? "IN " : ($v["action"] == 1 ? "OUT" : "UNKNOWN")) . " ".  $v["txid"] . " @ " . date("Y-m-d H:i:s", $v["timestamp"]) ."\n";
+        if($v["action"] == 0){
+            $json = json_decode(file_get_contents("https://blockchain.info/rawtx/" . $v["txid"] . "?cors=true"), true);
+            foreach ($json["out"] as $o) {
+                if (in_array($o["addr"], $depositAddresses, true)) {
+                    $v["value"] = $o["value"];
                 }
-
-
-                if ($n === ($num - 1)) { //Done with all
-
-                    $totalValue = 0;
-                    $totalCompounded = 0;
-                    $firstInvestment = PHP_INT_MAX;
-                    $lastInvestment = 0;
-
-                    foreach ($txs as $n => $tx) {
-                        if (!isset($tx["value"])) {
-                            continue;
-                        }
-                        echo "\n";
-                        echo "tx " . $tx["txid"] . " @ " . date("Y-m-d H:i:s", $tx["timestamp"]) . " / BTC " . number_format($tx["value"] / 100000000, 8) . "\n";
-
-                        $compoundedValue = $tx["value"];
-                        $lastEntry = null;
-                        if ($tx["timestamp"] < $firstInvestment) {
-                            $firstInvestment = $tx["timestamp"];
-                        }
-                        if ($tx["exit_timestamp"] !== PHP_INT_MAX and $tx["exit_timestamp"] > $lastInvestment) {
-                            $lastInvestment = $tx["exit_timestamp"];
-                        }
-
-                        $lastTime = 0;
-
-                        foreach ($index as $entry) {
-                            //TODO: check why this is not like this: if($entry["timestamp"] < $tx["timestamp"] or ($entry["timestamp"] >= $tx["timestamp"] and $lastTime < $tx["timestamp"])){
-                            //^ seems like this is intended by fund, how nice of them
-
-                            if ($entry["timestamp"] > $tx["exit_timestamp"]) {
-                                break;
-                            }
-
-                            if ($entry["timestamp"] < $tx["timestamp"]) {
-                                $lastTime = $entry["timestamp"];
-                                continue;
-                            }
-
-                            $lastEntry = $entry;
-
-                            $compoundedValue += $compoundedValue * ($entry["value"] / 100);
-                        }
-
-                        if($tx["exit_timestamp"] === PHP_INT_MAX){ //Not exited yet
-                            $totalCompounded += $compoundedValue;
-                            $totalValue += $tx["value"];
-                        }
-
-
-                        if ($lastEntry === null) {
-                            continue;
-                        }
-
-
-                        echo "\tcompounded BTC " . number_format($compoundedValue / 100000000, 8) . " @ " . date("Y-m-d H:i:s", $lastEntry["timestamp"]) . " / growth BTC " . number_format(($compoundedValue - $tx["value"]) / 100000000, 8) . " " . round((($compoundedValue - $tx["value"]) / $tx["value"]) * 100, 3) . "%\n";
-                    }
-
-                    echo "\n\n";
-                    echo "CURRENT / Current Initial Investment: BTC " . number_format($totalValue / 100000000, 8) . " / Current: BTC " . number_format($totalCompounded / 100000000, 8) . " / growth: BTC " . number_format(($totalCompounded - $totalValue) / 100000000, 8) . " " . ($totalValue === 0 ? 0 : number_format((($totalCompounded - $totalValue) / $totalValue) * 100, 3)) . "% / Profit fees: BTC " . number_format((($totalCompounded - $totalValue) / 100000000) * 0.2, 8) . "\n";
-                    echo "\n\n";
-
-                    foreach ($index as $entry) {
-                        if ($entry["timestamp"] < $firstInvestment) {
-                            continue;
-                        }
-                        if($lastInvestment !== 0 and $entry["timestamp"] > $lastInvestment){
-                            break;
-                        }
-                        echo date("Y-m-d H:i:s", $entry["timestamp"]) . " : " . $entry["value"] . "%\n";
-                    }
-                }
-
-            });
+            }
+            $txs[$v["txid"]] = $v;
+            $txs[$v["txid"]]["exit_timestamp"] = PHP_INT_MAX;
+        }else if ($v["action"] == 1){
+            $txs[$v["txid"]]["exit_timestamp"] = $v["timestamp"];
         }
+      }
+
+
+      $totalValue = 0;
+      $totalCompounded = 0;
+      $firstInvestment = PHP_INT_MAX;
+      $lastInvestment = 0;
+
+      foreach ($txs as $n => $tx) {
+          if (!isset($tx["value"])) {
+              continue;
+          }
+          echo "\n";
+          echo "tx " . $tx["txid"] . " @ " . date("Y-m-d H:i:s", $tx["timestamp"]) . " / BTC " . number_format($tx["value"] / 100000000, 8) . "\n";
+
+          $compoundedValue = $tx["value"];
+          $lastEntry = null;
+          if ($tx["timestamp"] < $firstInvestment) {
+              $firstInvestment = $tx["timestamp"];
+          }
+          if ($tx["exit_timestamp"] !== PHP_INT_MAX and $tx["exit_timestamp"] > $lastInvestment) {
+              $lastInvestment = $tx["exit_timestamp"];
+          }
+
+          $lastTime = 0;
+
+          foreach ($index as $entry) {
+              //TODO: check why this is not like this: if($entry["timestamp"] < $tx["timestamp"] or ($entry["timestamp"] >= $tx["timestamp"] and $lastTime < $tx["timestamp"])){
+              //^ seems like this is intended by fund, how nice of them
+
+              if ($entry["timestamp"] > $tx["exit_timestamp"]) {
+                  break;
+              }
+
+              if ($entry["timestamp"] < $tx["timestamp"]) {
+                  $lastTime = $entry["timestamp"];
+                  continue;
+              }
+
+              $lastEntry = $entry;
+
+              $compoundedValue += $compoundedValue * ($entry["value"] / 100);
+          }
+
+          if($tx["exit_timestamp"] === PHP_INT_MAX){ //Not exited yet
+              $totalCompounded += $compoundedValue;
+              $totalValue += $tx["value"];
+          }
+
+
+          if ($lastEntry === null) {
+              continue;
+          }
+
+
+          echo "\tcompounded BTC " . number_format($compoundedValue / 100000000, 8) . " @ " . date("Y-m-d H:i:s", $lastEntry["timestamp"]) . " / growth BTC " . number_format(($compoundedValue - $tx["value"]) / 100000000, 8) . " " . round((($compoundedValue - $tx["value"]) / $tx["value"]) * 100, 3) . "%\n";
+      }
+
+      echo "\n\n";
+      echo "CURRENT / Current Initial Investment: BTC " . number_format($totalValue / 100000000, 8) . " / Current: BTC " . number_format($totalCompounded / 100000000, 8) . " / growth: BTC " . number_format(($totalCompounded - $totalValue) / 100000000, 8) . " " . ($totalValue === 0 ? 0 : number_format((($totalCompounded - $totalValue) / $totalValue) * 100, 3)) . "% / Profit fees: BTC " . number_format((($totalCompounded - $totalValue) / 100000000) * 0.2, 8) . "\n";
+      echo "\n\n";
+
+      foreach ($index as $entry) {
+          if ($entry["timestamp"] < $firstInvestment) {
+              continue;
+          }
+          if($lastInvestment !== 0 and $entry["timestamp"] > $lastInvestment){
+              break;
+          }
+          echo date("Y-m-d H:i:s", $entry["timestamp"]) . " : " . $entry["value"] . "%\n";
+      }
     });
+  });
 });

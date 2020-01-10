@@ -9,7 +9,6 @@ use Web3\Providers\Provider;
 
 class StorageContract {
     const STORAGE_CONTRACT_ADDRESS = "0xb0963da9baef08711583252f5000Df44D4F56925";
-    const STORAGE_BITCOIN_WALLET = "33ns4GGpz7vVAfoXDpJttwd7XkwtnvtTjw";
 
     private $contract;
 

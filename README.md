@@ -37,13 +37,14 @@ $ php fund_balance.php "ETHEREUM_API_NODE_URL" "0x6507dd87a08adbffde9343e65936d9
 
 It will produce an output similar to this
 ```
+Acquiring valid Deposit Addresses
+Deposit Address: 33ns4GGpz7vVAfoXDpJttwd7XkwtnvtTjw
 Acquiring AMFEIX index
 Processing investor 0x6507dd87a08adbffde9343e65936d93bcdfa95f7
-Fetching 4 tx
-Processing BTC tx IN  70af10fd4a3d732468d15e95a677ac8d79cd3304d6bf3300c040fec967f1242c
-Processing BTC tx OUT 70af10fd4a3d732468d15e95a677ac8d79cd3304d6bf3300c040fec967f1242c
-Processing BTC tx IN  b327b3a2e75499b61ef01d1e92ab5bef64e8210808be3c5ba3c73f4b22493342
-Processing BTC tx OUT b327b3a2e75499b61ef01d1e92ab5bef64e8210808be3c5ba3c73f4b22493342
+Processing BTC tx IN  70af10fd4a3d732468d15e95a677ac8d79cd3304d6bf3300c040fec967f1242c @ 2019-06-24 16:36:21
+Processing BTC tx OUT 70af10fd4a3d732468d15e95a677ac8d79cd3304d6bf3300c040fec967f1242c @ 2019-06-26 18:56:45
+Processing BTC tx IN  b327b3a2e75499b61ef01d1e92ab5bef64e8210808be3c5ba3c73f4b22493342 @ 2019-06-27 11:34:50
+Processing BTC tx OUT b327b3a2e75499b61ef01d1e92ab5bef64e8210808be3c5ba3c73f4b22493342 @ 2019-06-28 19:58:09
 
 tx 70af10fd4a3d732468d15e95a677ac8d79cd3304d6bf3300c040fec967f1242c @ 2019-06-24 16:36:21 / BTC 0.00350000
 	compounded BTC 0.00353010 @ 2019-06-25 19:49:43 / growth BTC 0.00003010 0.86%
@@ -68,7 +69,7 @@ Usage: php fund_performance.php <HTTP Web3 endpoint>
 	<HTTP Web3 endpoint>: Could be your local node, or a remote one like https://infura.io/
 ```
 
-You can call this script to list the performances of AMFEIX. 
+You can call this script to list the performances of AMFEIX.
 
 ```
 $ php fund_performance.php "ETHEREUM_API_NODE_URL"
