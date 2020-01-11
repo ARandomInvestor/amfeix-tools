@@ -33,6 +33,7 @@ $ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
     echo "Processing investor $investorAddress\n";
     $ob->getTxs($investorAddress, function($values) use ($ob, $investorAddress, $depositAddresses, $index){
       $txs = [];
+
       foreach($values as $v){
         echo "Processing BTC tx " . ($v["action"] == 0 ? "IN " : ($v["action"] == 1 ? "OUT" : "UNKNOWN")) . " ".  $v["txid"] . " @ " . date("Y-m-d H:i:s", $v["timestamp"]) ."\n";
         if($v["action"] == 0){
@@ -52,23 +53,26 @@ $ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
 
       $totalValue = 0;
       $totalCompounded = 0;
+      $totalFees = 0;
       $firstInvestment = PHP_INT_MAX;
-      $lastInvestment = 0;
+      $lastInvestment = [null, 0];
 
       foreach ($txs as $n => $tx) {
           if (!isset($tx["value"])) {
               continue;
           }
           echo "\n";
-          echo "tx " . $tx["txid"] . " @ " . date("Y-m-d H:i:s", $tx["timestamp"]) . " / BTC " . number_format($tx["value"] / 100000000, 8) . "\n";
+          echo "tx " . $tx["txid"] ." @ " . date("Y-m-d H:i:s", $tx["timestamp"]) . " / ".($tx["address"] === "referer" ? "REFERRAL" : "BTC " . number_format($tx["value"] / 100000000, 8)) . ($tx["exit_timestamp"] !== PHP_INT_MAX ? " / WITHDRAWN" : "") ."\n";
 
           $compoundedValue = $tx["value"];
           $lastEntry = null;
           if ($tx["timestamp"] < $firstInvestment) {
               $firstInvestment = $tx["timestamp"];
           }
-          if ($tx["exit_timestamp"] !== PHP_INT_MAX and $tx["exit_timestamp"] > $lastInvestment) {
-              $lastInvestment = $tx["exit_timestamp"];
+          if (($lastInvestment[0] === null or $lastInvestment[1] !== 0) and $tx["exit_timestamp"] !== PHP_INT_MAX and $tx["exit_timestamp"] > $lastInvestment[1]) {
+              $lastInvestment = [$tx, $tx["exit_timestamp"]];
+          }else if($tx["exit_timestamp"] === PHP_INT_MAX){
+              $lastInvestment = [$tx, 0];
           }
 
           $lastTime = 0;
@@ -91,9 +95,18 @@ $ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
               $compoundedValue += $compoundedValue * ($entry["value"] / 100);
           }
 
-          if($tx["exit_timestamp"] === PHP_INT_MAX){ //Not exited yet
-              $totalCompounded += $compoundedValue;
-              $totalValue += $tx["value"];
+          if($tx["address"] === "referer"){
+              $compoundedValue = ($compoundedValue - $tx["value"]) * 0.1;
+              $tx["value"] = 0;
+              if($tx["exit_timestamp"] === PHP_INT_MAX){ //Not exited yet
+                  $totalCompounded += $compoundedValue;
+              }
+          }else{
+              if($tx["exit_timestamp"] === PHP_INT_MAX){ //Not exited yet
+                  $totalCompounded += $compoundedValue;
+                  $totalValue += $tx["value"];
+                  $totalFees += ($compoundedValue - $tx["value"]) * 0.2;
+              }
           }
 
 
@@ -102,18 +115,18 @@ $ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
           }
 
 
-          echo "\tcompounded BTC " . number_format($compoundedValue / 100000000, 8) . " @ " . date("Y-m-d H:i:s", $lastEntry["timestamp"]) . " / growth BTC " . number_format(($compoundedValue - $tx["value"]) / 100000000, 8) . " " . round((($compoundedValue - $tx["value"]) / $tx["value"]) * 100, 3) . "%\n";
+          echo "\tcompounded BTC " . number_format($compoundedValue / 100000000, 8) . " @ " . date("Y-m-d H:i:s", $lastEntry["timestamp"]) . " / growth BTC " . number_format(($compoundedValue - $tx["value"]) / 100000000, 8) . " " . ($tx["value"] === 0 ? 0 : round((($compoundedValue - $tx["value"]) / $tx["value"]) * 100, 3)) . "%\n";
       }
 
       echo "\n\n";
-      echo "CURRENT / Current Initial Investment: BTC " . number_format($totalValue / 100000000, 8) . " / Current: BTC " . number_format($totalCompounded / 100000000, 8) . " / growth: BTC " . number_format(($totalCompounded - $totalValue) / 100000000, 8) . " " . ($totalValue === 0 ? 0 : number_format((($totalCompounded - $totalValue) / $totalValue) * 100, 3)) . "% / Profit fees: BTC " . number_format((($totalCompounded - $totalValue) / 100000000) * 0.2, 8) . "\n";
+      echo "CURRENT / Current Initial Investment: BTC " . number_format($totalValue / 100000000, 8) . " / Current: BTC " . number_format($totalCompounded / 100000000, 8) . " / growth: BTC " . number_format(($totalCompounded - $totalValue) / 100000000, 8) . " " . ($totalValue === 0 ? 0 : number_format((($totalCompounded - $totalValue) / $totalValue) * 100, 3)) . "% / Profit fees: BTC " . number_format(($totalFees / 100000000), 8) . "\n";
       echo "\n\n";
 
       foreach ($index as $entry) {
           if ($entry["timestamp"] < $firstInvestment) {
               continue;
           }
-          if($lastInvestment !== 0 and $entry["timestamp"] > $lastInvestment){
+          if($lastInvestment[1] !== 0 and $entry["timestamp"] > $lastInvestment[1]){
               break;
           }
           echo date("Y-m-d H:i:s", $entry["timestamp"]) . " : " . $entry["value"] . "%\n";
