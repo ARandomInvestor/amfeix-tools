@@ -8,6 +8,7 @@
   },
   "require": {
     "ext-json": "*",
-    "sc0vu/web3.php": "dev-master"
+    "sc0vu/web3.php": "dev-master",
+    "denpa/php-bitcoinrpc": "^2.1"
   }
 }

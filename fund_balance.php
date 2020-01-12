@@ -4,6 +4,8 @@ require "vendor/autoload.php";
 
 use ARandomInvestor\AMFEIX\StorageContract;
 use Web3\Web3;
+use \ARandomInvestor\AMFEIX\provider\bitcoin\Blockchain_com;
+use function \Denpa\Bitcoin\to_bitcoin;
 
 date_default_timezone_set("UTC");
 
@@ -16,7 +18,7 @@ if($argc < 3){
 
 $web3 = new Web3($argv[1]);
 
-$ob = new StorageContract($web3->getProvider());
+$ob = new StorageContract($web3->getProvider(), new Blockchain_com());
 
 $investorAddress = trim($argv[2]);
 
@@ -37,7 +39,7 @@ $ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
       foreach($values as $v){
         echo "Processing BTC tx " . ($v["action"] == 0 ? "IN " : ($v["action"] == 1 ? "OUT" : "UNKNOWN")) . " ".  $v["txid"] . " @ " . date("Y-m-d H:i:s", $v["timestamp"]) ."\n";
         if($v["action"] == 0){
-            $json = json_decode(file_get_contents("https://blockchain.info/rawtx/" . $v["txid"] . "?cors=true"), true);
+            $json = $ob->getBitcoin()->getTransaction($v["txid"]);
             foreach ($json["out"] as $o) {
                 if (in_array($o["addr"], $depositAddresses, true)) {
                     $v["value"] = $o["value"];
@@ -65,7 +67,7 @@ $ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
               continue;
           }
           echo "\n";
-          echo "tx " . $tx["txid"] ." @ " . date("Y-m-d H:i:s", $tx["timestamp"]) . " / ".($tx["address"] === "referer" ? "REFERRAL" : "BTC " . number_format($tx["value"] / 100000000, 8)) . ($tx["exit_timestamp"] !== PHP_INT_MAX ? " / WITHDRAWN" : "") ."\n";
+          echo "tx " . $tx["txid"] ." @ " . date("Y-m-d H:i:s", $tx["timestamp"]) . " / ".($tx["address"] === "referer" ? "REFERRAL" : "BTC " . to_bitcoin($tx["value"])) . ($tx["exit_timestamp"] !== PHP_INT_MAX ? " / WITHDRAWN" : "") ."\n";
 
           $compoundedValue = $tx["value"];
           $lastEntry = null;
@@ -120,12 +122,12 @@ $ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
           }
 
 
-          echo "\tcompounded BTC " . number_format($compoundedValue / 100000000, 8) . " @ " . date("Y-m-d H:i:s", $lastEntry["timestamp"]) . " / growth BTC " . number_format(($compoundedValue - $tx["value"]) / 100000000, 8) . " " . ($tx["value"] === 0 ? 0 : round((($compoundedValue - $tx["value"]) / $tx["value"]) * 100, 3)) . "%\n";
+          echo "\tcompounded BTC " . to_bitcoin($compoundedValue) . " @ " . date("Y-m-d H:i:s", $lastEntry["timestamp"]) . " / growth BTC " . to_bitcoin(($compoundedValue - $tx["value"])) . " " . ($tx["value"] === 0 ? 0 : round((($compoundedValue - $tx["value"]) / $tx["value"]) * 100, 3)) . "%\n";
       }
 
       echo "\n\n";
-      echo "LIFETIME TOTAL / Initial Investment: BTC " . number_format($totalValue / 100000000, 8) . " / Balance: BTC " . number_format($totalCompounded / 100000000, 8) . " / growth: BTC " . number_format(($totalCompounded - $totalValue) / 100000000, 8) . " " . ($totalValue === 0 ? 0 : number_format((($totalCompounded - $totalValue) / $totalValue) * 100, 3)) . "% / Profit fees: BTC " . number_format(($totalFees / 100000000), 8) . "\n\n";
-      echo "CURRENT / Initial Investment: BTC " . number_format($currentValue / 100000000, 8) . " / Balance: BTC " . number_format($currentCompounded / 100000000, 8) . " / growth: BTC " . number_format(($currentCompounded - $currentValue) / 100000000, 8) . " " . ($currentValue === 0 ? 0 : number_format((($currentCompounded - $currentValue) / $currentValue) * 100, 3)) . "% / Profit fees: BTC " . number_format(($currentFees / 100000000), 8) . "\n";
+      echo "LIFETIME TOTAL / Initial Investment: BTC " . to_bitcoin($totalValue) . " / Balance: BTC " . to_bitcoin($totalCompounded) . " / growth: BTC " . to_bitcoin($totalCompounded - $totalValue) . " " . ($totalValue === 0 ? 0 : number_format((($totalCompounded - $totalValue) / $totalValue) * 100, 3)) . "% / Profit fees: BTC " . to_bitcoin($totalFees) . "\n\n";
+      echo "CURRENT / Initial Investment: BTC " . to_bitcoin($currentValue) . " / Balance: BTC " . to_bitcoin($currentCompounded) . " / growth: BTC " . to_bitcoin($currentCompounded - $currentValue) . " " . ($currentValue === 0 ? 0 : number_format((($currentCompounded - $currentValue) / $currentValue) * 100, 3)) . "% / Profit fees: BTC " . to_bitcoin($currentFees) . "\n";
       echo "\n\n";
 
       foreach ($index as $entry) {

@@ -3,6 +3,7 @@
 namespace ARandomInvestor\AMFEIX;
 
 
+use ARandomInvestor\AMFEIX\provider\bitcoin\BitcoinProvider;
 use phpseclib\Math\BigInteger;
 use Web3\Contract;
 use Web3\Providers\Provider;
@@ -11,11 +12,21 @@ class StorageContract {
     const STORAGE_CONTRACT_ADDRESS = "0xb0963da9baef08711583252f5000Df44D4F56925";
 
     private $contract;
+    private $btc;
 
-    public function __construct(Provider $provider) {
+    public function __construct(Provider $provider, BitcoinProvider $btc = null) {
         $ContractMeta = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "resources" . DIRECTORY_SEPARATOR . "Storage.json"));
         $this->contract = new Contract($provider, $ContractMeta);
         $this->contract->at(self::STORAGE_CONTRACT_ADDRESS);
+        $this->btc = $btc;
+    }
+
+    public function getContract() : Contract{
+        return $this->contract;
+    }
+
+    public function getBitcoin() : ?BitcoinProvider{
+        return $this->btc;
     }
 
     private static function getComplement(BigInteger $n, $bits = 256) {
