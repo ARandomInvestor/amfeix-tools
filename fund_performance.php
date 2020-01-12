@@ -24,6 +24,8 @@ $ob->getFundPerformace(function ($index) {
     $currentCompound = 1;
     $currentMonth = 0;
 
+    $lastIndex = null;
+
     foreach ($index as $i => $entry) {
         if($i > 0 and date("Y-m", $entry["timestamp"]) !== date("Y-m", $index[$i - 1]["timestamp"])){
             echo "=== Total ".date("Y-m F", $index[$i - 1]["timestamp"]).": Sum of values ".number_format($currentMonth, 2)."% / Compounded growth ".number_format(($currentCompound - 1) * 100, 3)."% ===\n\n";
@@ -33,7 +35,11 @@ $ob->getFundPerformace(function ($index) {
         $currentCompound *= 1 + ($entry["value"] / 100);
         $currentMonth += $entry["value"];
         echo date("Y-m-d H:i:s", $entry["timestamp"]) . " : " . $entry["value"] . "%\n";
+        $lastIndex = $i;
     }
-    
-    echo "=== Ongoing ".date("Y-m F", $index[$i]["timestamp"]).": Sum of values ".number_format($currentMonth, 2)."% / Compounded growth ".number_format(($currentCompound - 1) * 100, 3)."% ===\n\n";
+
+    if($lastIndex !== null){
+        echo "=== Ongoing ".date("Y-m F", $index[$lastIndex]["timestamp"]).": Sum of values ".number_format($currentMonth, 2)."% / Compounded growth ".number_format(($currentCompound - 1) * 100, 3)."% ===\n\n";
+    }
+
 });
