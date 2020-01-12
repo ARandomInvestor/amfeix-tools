@@ -51,6 +51,9 @@ $ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
       }
 
 
+      $currentValue = 0;
+      $currentCompounded = 0;
+      $currentFees = 0;
       $totalValue = 0;
       $totalCompounded = 0;
       $totalFees = 0;
@@ -75,8 +78,6 @@ $ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
               $lastInvestment = [$tx, 0];
           }
 
-          $lastTime = 0;
-
           foreach ($index as $entry) {
               //TODO: check why this is not like this: if($entry["timestamp"] < $tx["timestamp"] or ($entry["timestamp"] >= $tx["timestamp"] and $lastTime < $tx["timestamp"])){
               //^ seems like this is intended by fund, how nice of them
@@ -86,7 +87,6 @@ $ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
               }
 
               if ($entry["timestamp"] < $tx["timestamp"]) {
-                  $lastTime = $entry["timestamp"];
                   continue;
               }
 
@@ -98,14 +98,19 @@ $ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
           if($tx["address"] === "referer"){
               $compoundedValue = ($compoundedValue - $tx["value"]) * 0.1;
               $tx["value"] = 0;
+              $totalCompounded += $compoundedValue;
               if($tx["exit_timestamp"] === PHP_INT_MAX){ //Not exited yet
-                  $totalCompounded += $compoundedValue;
+                  $currentCompounded += $compoundedValue;
               }
           }else{
+              $totalCompounded += $compoundedValue;
+              $totalValue += $tx["value"];
+              $totalFees += ($compoundedValue - $tx["value"]) * 0.2;
+
               if($tx["exit_timestamp"] === PHP_INT_MAX){ //Not exited yet
-                  $totalCompounded += $compoundedValue;
-                  $totalValue += $tx["value"];
-                  $totalFees += ($compoundedValue - $tx["value"]) * 0.2;
+                  $currentCompounded += $compoundedValue;
+                  $currentValue += $tx["value"];
+                  $currentFees += ($compoundedValue - $tx["value"]) * 0.2;
               }
           }
 
@@ -119,7 +124,8 @@ $ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
       }
 
       echo "\n\n";
-      echo "CURRENT / Current Initial Investment: BTC " . number_format($totalValue / 100000000, 8) . " / Current: BTC " . number_format($totalCompounded / 100000000, 8) . " / growth: BTC " . number_format(($totalCompounded - $totalValue) / 100000000, 8) . " " . ($totalValue === 0 ? 0 : number_format((($totalCompounded - $totalValue) / $totalValue) * 100, 3)) . "% / Profit fees: BTC " . number_format(($totalFees / 100000000), 8) . "\n";
+      echo "LIFETIME TOTAL / Initial Investment: BTC " . number_format($totalValue / 100000000, 8) . " / Balance: BTC " . number_format($totalCompounded / 100000000, 8) . " / growth: BTC " . number_format(($totalCompounded - $totalValue) / 100000000, 8) . " " . ($totalValue === 0 ? 0 : number_format((($totalCompounded - $totalValue) / $totalValue) * 100, 3)) . "% / Profit fees: BTC " . number_format(($totalFees / 100000000), 8) . "\n\n";
+      echo "CURRENT / Initial Investment: BTC " . number_format($currentValue / 100000000, 8) . " / Balance: BTC " . number_format($currentCompounded / 100000000, 8) . " / growth: BTC " . number_format(($currentCompounded - $currentValue) / 100000000, 8) . " " . ($currentValue === 0 ? 0 : number_format((($currentCompounded - $currentValue) / $currentValue) * 100, 3)) . "% / Profit fees: BTC " . number_format(($currentFees / 100000000), 8) . "\n";
       echo "\n\n";
 
       foreach ($index as $entry) {
