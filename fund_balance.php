@@ -16,7 +16,7 @@ if($argc < 3){
     exit(1);
 }
 
-$web3 = new Web3($argv[1]);
+$web3 = new Web3(new \Web3\Providers\HttpProvider(new \Web3\RequestManagers\HttpRequestManager($argv[1], 10)));
 
 $ob = new StorageContract($web3->getProvider(), new Blockchain_com());
 
@@ -26,94 +26,28 @@ if($investorAddress === ""){
     echo "Please provide an (ETH) Investor Address tied to contract.\n";
     exit(1);
 }
-echo "Acquiring valid Deposit Addresses\n";
-$ob->getDepositAddresses(function($depositAddresses) use($ob, $investorAddress){
-  array_map(function($a){echo "Deposit Address: " . $a . "\n";}, $depositAddresses);
 
-  echo "Acquiring AMFEIX index\n";
-  $ob->getFundPerformace(function ($index) use ($ob, $investorAddress, $depositAddresses) {
-    echo "Processing investor $investorAddress\n";
+//$ob->setDebug(true);
 
-    $investor = new \ARandomInvestor\AMFEIX\InvestorAccount($investorAddress, $ob);
-    $investor->getTransactionsWithInterest($index, function ($transactions) use ($ob, $index, $depositAddresses){
-        $currentValue = 0;
-        $currentCompounded = 0;
-        $currentFees = 0;
-        $totalValue = 0;
-        $totalCompounded = 0;
-        $totalFees = 0;
-        $firstInvestment = PHP_INT_MAX;
-        $lastInvestment = [null, 0];
+$investor = new \ARandomInvestor\AMFEIX\InvestorAccount($investorAddress, $ob);
+echo "Querying Investor Address $investorAddress\n";
 
-        foreach($transactions as &$tx){
-            $data = $ob->getBitcoin()->getTransaction($tx["txid"]);
-            foreach ($data["out"] as $o) {
-                if (in_array($o["addr"], $depositAddresses, true)) {
-                    $tx["value"] = $o["value"];
-                }
-            }
-
-            if (!isset($tx["value"])) {
-                continue;
-            }
-
-
-            if ($tx["timestamp"] < $firstInvestment) {
-                $firstInvestment = $tx["timestamp"];
-            }
-            if (($lastInvestment[0] === null or $lastInvestment[1] !== 0) and $tx["exit_timestamp"] !== PHP_INT_MAX and $tx["exit_timestamp"] > $lastInvestment[1]) {
-                $lastInvestment = [$tx, $tx["exit_timestamp"]];
-            }else if($tx["exit_timestamp"] === PHP_INT_MAX){
-                $lastInvestment = [$tx, 0];
-            }
-
-            echo "\n";
-            echo "tx " . $tx["txid"] ." @ " . date("Y-m-d H:i:s", $tx["timestamp"]) . " / ".($tx["address"] === "referer" ? "REFERRAL" : "BTC " . to_bitcoin($tx["value"])) . ($tx["exit_timestamp"] !== PHP_INT_MAX ? " / WITHDRAWN" : "") ."\n";
-
-            if($tx["address"] === "referer"){
-                $compoundedValue = (($tx["interest"] * $tx["value"]) - $tx["value"]) * 0.1;
-                $totalCompounded += $compoundedValue;
-                if($tx["exit_timestamp"] === PHP_INT_MAX){ //Not exited yet
-                    $currentCompounded += $compoundedValue;
-                }
-                $tx["value"] = 0;
-            }else{
-                $compoundedValue = $tx["interest"] * $tx["value"];
-
-                $totalCompounded += $compoundedValue;
-                $totalValue += $tx["value"];
-                $totalFees += $tx["fee"] * $tx["value"];
-
-                if($tx["exit_timestamp"] === PHP_INT_MAX){ //Not exited yet
-                    $currentCompounded += $compoundedValue;
-                    $currentValue += $tx["value"];
-                    $currentFees += $tx["fee"] * $tx["value"];
-                }
-            }
-
-
-            if ($tx["last_interest"] === null) {
-                continue;
-            }
-
-
-            echo "\tcompounded BTC " . to_bitcoin($compoundedValue) . " @ " . date("Y-m-d H:i:s", $tx["last_interest"]) . " / growth BTC " . to_bitcoin(($compoundedValue - $tx["value"])) . " " . ($tx["value"] === 0 ? 0 : round((($compoundedValue - $tx["value"]) / $tx["value"]) * 100, 3)) . "%\n";
+$investor->getBalance(function ($balance){
+    foreach ($balance["transactions"] as $tx){
+        echo "\n";
+        echo "tx " . $tx["txid"] ." @ " . date("Y-m-d H:i:s", $tx["timestamp"]) . " / ".($tx["address"] === "referer" ? "REFERRAL" : "BTC " . to_bitcoin($tx["value"])) . ($tx["exit_timestamp"] !== PHP_INT_MAX ? " / WITHDRAWN" : "") ."\n";
+        if ($tx["last_interest"] === null) {
+            continue;
         }
+        echo "\tcompounded BTC " . to_bitcoin($tx["balance"]) . " @ " . date("Y-m-d H:i:s", $tx["last_interest"]) . " / growth BTC " . to_bitcoin(($tx["balance"] - $tx["value"])) . " " . ($tx["value"] === 0 ? 0 : round((($tx["balance"] - $tx["value"]) / $tx["value"]) * 100, 3)) . "%\n";
+    }
 
-        echo "\n\n";
-        echo "LIFETIME TOTAL / Initial Investment: BTC " . to_bitcoin($totalValue) . " / Balance: BTC " . to_bitcoin($totalCompounded) . " / growth: BTC " . to_bitcoin($totalCompounded - $totalValue) . " " . ($totalValue === 0 ? 0 : number_format((($totalCompounded - $totalValue) / $totalValue) * 100, 3)) . "% / Profit fees: BTC " . to_bitcoin($totalFees) . "\n\n";
-        echo "CURRENT / Initial Investment: BTC " . to_bitcoin($currentValue) . " / Balance: BTC " . to_bitcoin($currentCompounded) . " / growth: BTC " . to_bitcoin($currentCompounded - $currentValue) . " " . ($currentValue === 0 ? 0 : number_format((($currentCompounded - $currentValue) / $currentValue) * 100, 3)) . "% / Profit fees: BTC " . to_bitcoin($currentFees) . "\n";
-        echo "\n\n";
+    echo "\n\n";
+    echo "LIFETIME TOTAL / Initial Investment: BTC " . to_bitcoin($balance["total"]["initial"]) . " / Balance: BTC " . to_bitcoin($balance["total"]["balance"]) . " / growth: BTC " . to_bitcoin($balance["total"]["growth"]) . " " . number_format($balance["total"]["yield"] * 100, 3) . "% / Profit fees: BTC " . to_bitcoin($balance["total"]["fee"]) . "\n\n";
+    echo "CURRENT / Initial Investment: BTC " . to_bitcoin($balance["current"]["initial"]) . " / Balance: BTC " . to_bitcoin($balance["current"]["balance"]) . " / growth: BTC " . to_bitcoin($balance["current"]["growth"]) . " " . number_format($balance["current"]["yield"] * 100, 3) . "% / Profit fees: BTC " . to_bitcoin($balance["current"]["fee"]) . "\n";
+    echo "\n\n";
 
-        foreach ($index as $entry) {
-            if ($entry["timestamp"] < $firstInvestment) {
-                continue;
-            }
-            if($lastInvestment[1] !== 0 and $entry["timestamp"] > $lastInvestment[1]){
-                break;
-            }
-            echo date("Y-m-d H:i:s", $entry["timestamp"]) . " : " . $entry["value"] . "%\n";
-        }
-    });
-  });
+    foreach ($balance["index"] as $entry) {
+        echo date("Y-m-d H:i:s", $entry["timestamp"]) . " : " . $entry["value"] . "%\n";
+    }
 });

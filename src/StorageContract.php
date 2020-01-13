@@ -13,12 +13,17 @@ class StorageContract {
 
     private $contract;
     private $btc;
+    private $debug = false;
 
     public function __construct(Provider $provider, BitcoinProvider $btc = null) {
         $ContractMeta = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "resources" . DIRECTORY_SEPARATOR . "Storage.json"));
         $this->contract = new Contract($provider, $ContractMeta);
         $this->contract->at(self::STORAGE_CONTRACT_ADDRESS);
         $this->btc = $btc;
+    }
+
+    public function setDebug(bool $debug){
+        $this->debug = $debug;
     }
 
     public function getContract() : Contract{
@@ -35,6 +40,9 @@ class StorageContract {
     }
 
     public function getFundPerformace(callable $return) {
+        if($this->debug){
+            echo "Fetching AMFEIX Performance Index\n";
+        }
         $this->contract->call("getAll", function ($err, $values) use ($return) {
             if ($err !== null) {
                 throw $err;
@@ -56,6 +64,9 @@ class StorageContract {
      * @param callable $return
      */
     public function getAUM(callable $return) {
+        if($this->debug){
+            echo "Fetching AMFEIX AUM\n";
+        }
         $this->contract->call("aum", function ($err, $values) use ($return) {
             if ($err !== null) {
                 throw $err;
@@ -71,6 +82,9 @@ class StorageContract {
      * @param callable $return
      */
     public function getInvestors(callable $return) {
+        if($this->debug){
+            echo "Fetching all investor addresses\n";
+        }
       $this->contract->call("getAllInvestors", function ($err, $values) use ($return) {
           if ($err !== null) {
               throw $err;
@@ -118,12 +132,19 @@ class StorageContract {
      * @param callable $return
      */
     public function getDepositAddress(int $n, callable $return) {
+        if($this->debug){
+            echo "Fetching deposit address $n\n";
+        }
         $this->contract->call("fundDepositAddresses", $n, function ($err, $values) use ($return) {
             if ($err !== null) {
                 throw $err;
             }
 
             /** @var string[] $values */
+
+            if($this->debug){
+                echo "Deposit address ".$values[0]."\n";
+            }
             $return($values[0]);
         });
     }
@@ -157,6 +178,10 @@ class StorageContract {
             }
 
             /** @var string[] $values */
+
+            if($this->debug){
+                echo "Fee address ".$values[0]."\n";
+            }
             $return($values[0]);
         });
     }
@@ -186,12 +211,21 @@ class StorageContract {
      * @param callable $return
      */
     public function getTx(string $address, int $n, callable $return) {
+
+        if($this->debug){
+            echo "Fetching transaction $n for address ".$address."\n";
+        }
         $this->contract->call("getTx", $address, $n, function ($err, $values) use ($return) {
             if ($err !== null) {
                 throw $err;
             }
 
-            $return(["txid" => $values[0], "pubkey" => $values[1], "address" => $values[2], "action" => $values[3]->toString(), "timestamp" => $values[4]->toString(),]);
+            $tx = ["txid" => $values[0], "pubkey" => $values[1], "address" => $values[2], "action" => $values[3]->toString(), "timestamp" => $values[4]->toString(),];
+
+            if($this->debug){
+                echo "Fetched tx " . ($tx["action"] == 0 ? "IN " : ($tx["action"] == 1 ? "OUT" : "UNKNOWN")) . " ".  $tx["txid"] . " @ " . date("Y-m-d H:i:s", $tx["timestamp"]) ."\n";
+            }
+            $return($tx);
         });
     }
 
