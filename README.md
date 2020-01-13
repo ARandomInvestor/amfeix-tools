@@ -8,17 +8,25 @@ PHP > 7.1 and [Composer](https://getcomposer.org/). Run `$ composer update` to i
 
 ### Ethereum request endpoint
 To run calls against the Contract you need either a local Ethereum node (like [geth](https://ethereum.github.io/go-ethereum/), or [parity](https://www.parity.io/)) that can run such queries, or set up a [free infura.io account](https://infura.io/) (select Core FREE when registering) and run calls against its API.
+You can also use one of the open relays available listed below.
 
 There is also more information on the [web3py info page](https://web3py.readthedocs.io/en/stable/node.html)
 
-
+#### Local Ethereum node
 
 If you end up using a local node, *ETHEREUM_API_NODE_URL* will look something like this `http://localhost:8545`.
 
-
+#### Remote Ethereum server via Infura.io
 Otherwise if you use infura.io, you will end up with this *ETHEREUM_API_NODE_URL* after replacing *YOUR_INFURA_API_KEY* with your *PROJECT ID*:  `https://mainnet.infura.io/v3/YOUR_INFURA_API_KEY`
 
 You might have to whitelist contract address `0xb0963da9baef08711583252f5000Df44D4F56925` under project security, which is AMFEIX Storage contract address.
+
+#### "Open" Remote Ethereum servers
+
+If you don't have anything, you can use one of these as *ETHEREUM_API_NODE_URL*:
+ - `https://nodes.mewapi.io/rpc/eth`
+ - `https://mainnet.infura.io/mew`
+ - `https://api.mycryptoapi.com/eth`
 
 
 ## Example: fund_balance.php

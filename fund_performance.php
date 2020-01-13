@@ -13,7 +13,7 @@ if($argc < 2){
     exit(1);
 }
 
-$web3 = new Web3($argv[1]);
+$web3 = new Web3(new \Web3\Providers\HttpProvider(new \Web3\RequestManagers\HttpRequestManager($argv[1], 10)));
 
 $ob = new StorageContract($web3->getProvider());
 
