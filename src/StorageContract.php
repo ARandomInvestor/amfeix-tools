@@ -117,7 +117,7 @@ class StorageContract {
      * @param int $n Address number to get
      * @param callable $return
      */
-    public function getDepositAddress($n, callable $return) {
+    public function getDepositAddress(int $n, callable $return) {
         $this->contract->call("fundDepositAddresses", $n, function ($err, $values) use ($return) {
             if ($err !== null) {
                 throw $err;
@@ -150,7 +150,7 @@ class StorageContract {
      * @param int $n Address number to get
      * @param callable $return
      */
-    public function getFeeAddress($n, callable $return) {
+    public function getFeeAddress(int $n, callable $return) {
         $this->contract->call("feeAddresses", $n, function ($err, $values) use ($return) {
             if ($err !== null) {
                 throw $err;
@@ -166,10 +166,10 @@ class StorageContract {
     }
 
     /**
-     * @param $address
+     * @param string $address
      * @param callable $return
      */
-    public function getTxCount($address, callable $return) {
+    public function getTxCount(string $address, callable $return) {
         $this->contract->call("ntx", $address, function ($err, $values) use ($return) {
             if ($err !== null) {
                 throw $err;
@@ -181,11 +181,11 @@ class StorageContract {
     }
 
     /**
-     * @param $address
+     * @param string $address
      * @param int $n Transaction number to get
      * @param callable $return
      */
-    public function getTx($address, $n, callable $return) {
+    public function getTx(string $address, int $n, callable $return) {
         $this->contract->call("getTx", $address, $n, function ($err, $values) use ($return) {
             if ($err !== null) {
                 throw $err;
