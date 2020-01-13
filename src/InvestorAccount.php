@@ -107,7 +107,7 @@ class InvestorAccount{
                         if($tx["address"] === "referer"){
                             $compoundedValue = (($tx["interest"] * $tx["value"]) - $tx["value"]) * 0.1;
                             $totalCompounded += $compoundedValue;
-                            $tx["balance"] = $totalCompounded;
+                            $tx["balance"] = $compoundedValue;
                             if($tx["exit_timestamp"] === PHP_INT_MAX){ //Not exited yet
                                 $currentCompounded += $compoundedValue;
                             }
@@ -118,7 +118,7 @@ class InvestorAccount{
                             $totalCompounded += $compoundedValue;
                             $totalValue += $tx["value"];
                             $totalFees += $tx["fee"] * ($compoundedValue - $tx["value"]);
-                            $tx["balance"] = $totalCompounded;
+                            $tx["balance"] = $compoundedValue;
 
                             if($tx["exit_timestamp"] === PHP_INT_MAX){ //Not exited yet
                                 $currentCompounded += $compoundedValue;
