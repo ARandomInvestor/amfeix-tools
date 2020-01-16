@@ -39,6 +39,12 @@ class StorageContract {
         return $n->copy()->bitwise_and($mask)->multiply(new BigInteger(-1))->add($n->copy()->bitwise_and($mask->copy()->bitwise_not()));
     }
 
+
+    /**
+     * Returned performance values include 20% performance fee applied
+     *
+     * @param callable $return
+     */
     public function getFundPerformace(callable $return) {
         if($this->debug){
             echo "Fetching AMFEIX Performance Index\n";

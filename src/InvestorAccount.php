@@ -12,6 +12,9 @@ class InvestorAccount{
         $this->contract = $contract;
     }
 
+    /**
+     * @param callable $result
+     */
     public function getTransactions(callable $result) {
         $this->contract->getTxs($this->address, function ($values) use ($result) {
             $txs = [];
@@ -28,6 +31,10 @@ class InvestorAccount{
         });
     }
 
+    /**
+     * @param array $index
+     * @param callable $result
+     */
     public function getTransactionsWithInterest(array $index, callable $result){
         $this->getTransactions(function ($txs) use($index, $result){
             foreach ($txs as &$tx){
@@ -51,10 +58,12 @@ class InvestorAccount{
                 }
 
                 $tx["interest"] = $compoundedValue;
+
+                //Interest value includes 20% performance fee
                 if($tx["address"] === "referer"){
                     $tx["fee"] = 0;
                 }else{
-                    $tx["fee"] = $compoundedValue * 0.2;
+                    $tx["fee"] = ($compoundedValue / 0.8) * 0.2; //TODO: make this correct. Performance fee is not applied when yield is <= 0
                 }
             }
 
@@ -63,6 +72,10 @@ class InvestorAccount{
         });
     }
 
+    /**
+     * @param callable $result
+     * @throws \Exception
+     */
     public function getBalance(callable $result){
         if($this->contract->getBitcoin() === null){
             throw new \Exception('$this->contract->getBitcoin() === null');
@@ -105,7 +118,7 @@ class InvestorAccount{
                         }
 
                         if($tx["address"] === "referer"){
-                            $compoundedValue = (($tx["interest"] * $tx["value"]) - $tx["value"]) * 0.1;
+                            $compoundedValue = (($tx["interest"] * $tx["value"]) - $tx["value"]) * 0.1; //TODO: why is this not ((profit) / 0.8) * 0.1
                             $totalCompounded += $compoundedValue;
                             $tx["balance"] = $compoundedValue;
                             if($tx["exit_timestamp"] === PHP_INT_MAX){ //Not exited yet

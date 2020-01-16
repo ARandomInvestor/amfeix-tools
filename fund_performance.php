@@ -23,23 +23,33 @@ echo "Acquiring AMFEIX index\n";
 $ob->getFundPerformace(function ($index) {
     $currentCompound = 1;
     $currentMonth = 0;
+    $realCompound = 1;
+    $realMonth = 0;
 
     $lastIndex = null;
 
     foreach ($index as $i => $entry) {
         if($i > 0 and date("Y-m", $entry["timestamp"]) !== date("Y-m", $index[$i - 1]["timestamp"])){
-            echo "=== Total ".date("Y-m F", $index[$i - 1]["timestamp"]).": Sum of values ".number_format($currentMonth, 2)."% / Compounded growth ".number_format(($currentCompound - 1) * 100, 3)."% ===\n\n";
+            echo "=== Total ".date("Y-m F", $index[$i - 1]["timestamp"]).": Sum of values ".number_format($currentMonth, 3)."% (".number_format($realMonth, 3)."%) / Compounded growth ".number_format(($currentCompound - 1) * 100, 3)."% (".number_format(($realCompound - 1) * 100, 3)."%) ===\n\n";
             $currentCompound = 1;
             $currentMonth = 0;
+            $realCompound = 1;
+            $realMonth = 0;
         }
+
         $currentCompound *= 1 + ($entry["value"] / 100);
         $currentMonth += $entry["value"];
-        echo date("Y-m-d H:i:s", $entry["timestamp"]) . " : " . $entry["value"] . "%\n";
+
+        $realValue = $entry["value"] > 0 ? $entry["value"] / 0.8 : $entry["value"];
+
+        $realCompound *= 1 + ($realValue / 100);
+        $realMonth += $realValue;
+        echo date("Y-m-d H:i:s", $entry["timestamp"]) . " : " . $entry["value"] . "%".($entry["value"] > 0 ? " (".number_format($realValue, 3)."%)" : "")."\n";
         $lastIndex = $i;
     }
 
     if($lastIndex !== null){
-        echo "=== Ongoing ".date("Y-m F", $index[$lastIndex]["timestamp"]).": Sum of values ".number_format($currentMonth, 2)."% / Compounded growth ".number_format(($currentCompound - 1) * 100, 3)."% ===\n\n";
+        echo "=== Ongoing ".date("Y-m F", $index[$lastIndex]["timestamp"]).": Sum of values ".number_format($currentMonth, 3)."% (".number_format($realMonth, 3)."%) / Compounded growth ".number_format(($currentCompound - 1) * 100, 3)."% (".number_format(($realCompound - 1) * 100, 3)."%) ===\n\n";
     }
 
 });
