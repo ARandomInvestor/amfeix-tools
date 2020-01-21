@@ -26,6 +26,9 @@ $ob->getFundPerformace(function ($index) {
     $realCompound = 1;
     $realMonth = 0;
 
+    $totalCompound = 1;
+    $totalYear = 0;
+
     $lastIndex = null;
 
     foreach ($index as $i => $entry) {
@@ -40,6 +43,9 @@ $ob->getFundPerformace(function ($index) {
         $currentCompound *= 1 + ($entry["value"] / 100);
         $currentMonth += $entry["value"];
 
+        $totalCompound *= 1 + ($entry["value"] / 100);
+        $totalYear += $entry["value"];
+
         $realValue = $entry["value"] > 0 ? $entry["value"] / 0.8 : $entry["value"];
 
         $realCompound *= 1 + ($realValue / 100);
@@ -50,6 +56,7 @@ $ob->getFundPerformace(function ($index) {
 
     if($lastIndex !== null){
         echo "=== Ongoing ".date("Y-m F", $index[$lastIndex]["timestamp"]).": Sum of values ".number_format($currentMonth, 3)."% (".number_format($realMonth, 3)."%) / Compounded growth ".number_format(($currentCompound - 1) * 100, 3)."% (".number_format(($realCompound - 1) * 100, 3)."%) ===\n\n";
+        echo "=== TOTAL: Sum of values ".number_format($totalYear, 3)."% / Compounded growth ".number_format(($totalCompound - 1) * 100, 3)."% ===\n\n";
     }
 
 });
