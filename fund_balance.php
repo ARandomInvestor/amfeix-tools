@@ -39,12 +39,12 @@ $investor->getBalance(function ($balance){
         if ($tx["last_interest"] === null) {
             continue;
         }
-        echo "\tcompounded BTC " . to_bitcoin($tx["balance"]) . " @ " . date("Y-m-d H:i:s", $tx["last_interest"]) . " / growth BTC " . to_bitcoin(($tx["balance"] - $tx["value"])) . " " . ($tx["value"] === 0 ? 0 : round((($tx["balance"] - $tx["value"]) / $tx["value"]) * 100, 3)) . "%\n";
+        echo "\tcompounded BTC " . to_bitcoin($tx["balance"]) . " @ " . date("Y-m-d H:i:s", $tx["last_interest"]) . " / growth BTC " . to_bitcoin(($tx["balance"] - $tx["value"])) . " / profit " . ($tx["value"] === 0 ? 0 : round((($tx["balance"] - $tx["value"]) / $tx["value"]) * 100, 3)) . "%\n";
     }
 
     echo "\n\n";
-    echo "LIFETIME TOTAL / Initial Investment: BTC " . to_bitcoin($balance["total"]["initial"]) . " / Balance: BTC " . to_bitcoin($balance["total"]["balance"]) . " / growth: BTC " . to_bitcoin($balance["total"]["growth"]) . " " . number_format($balance["total"]["yield"] * 100, 3) . "% / Performance fees (already deducted): BTC " . to_bitcoin($balance["total"]["fee"]) . "\n\n";
-    echo "CURRENT / Initial Investment: BTC " . to_bitcoin($balance["current"]["initial"]) . " / Balance: BTC " . to_bitcoin($balance["current"]["balance"]) . " / growth: BTC " . to_bitcoin($balance["current"]["growth"]) . " " . number_format($balance["current"]["yield"] * 100, 3) . "% / Performance fees (already deducted): BTC " . to_bitcoin($balance["current"]["fee"]) . "\n";
+    echo "LIFETIME TOTAL / Initial Investment: BTC " . to_bitcoin($balance["total"]["initial"]) . " / Balance: BTC " . to_bitcoin($balance["total"]["balance"]) . " / growth: BTC " . to_bitcoin($balance["total"]["growth"]) . " / profit " . number_format($balance["total"]["yield"] * 100, 3) . "% / Performance fees (already deducted): BTC " . to_bitcoin($balance["total"]["fee"]) . "\n\n";
+    echo "CURRENT / Initial Investment: BTC " . to_bitcoin($balance["current"]["initial"]) . " / Balance: BTC " . to_bitcoin($balance["current"]["balance"]) . " / growth: BTC " . to_bitcoin($balance["current"]["growth"]) . " / profit " . number_format($balance["current"]["yield"] * 100, 3) . "% / Performance fees (already deducted): BTC " . to_bitcoin($balance["current"]["fee"]) . "\n";
     echo "\n\n";
 
     foreach ($balance["index"] as $entry) {
