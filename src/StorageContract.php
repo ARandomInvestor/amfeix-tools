@@ -16,7 +16,7 @@ class StorageContract {
     private $debug = false;
 
     public function __construct(Provider $provider, BitcoinProvider $btc = null) {
-        $ContractMeta = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "resources" . DIRECTORY_SEPARATOR . "Storage.json"));
+        $ContractMeta = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . "abi" . DIRECTORY_SEPARATOR . self::STORAGE_CONTRACT_ADDRESS . ".json"));
         $this->contract = new Contract($provider, $ContractMeta);
         $this->contract->at(self::STORAGE_CONTRACT_ADDRESS);
         $this->btc = $btc;
