@@ -12,6 +12,10 @@ class InvestorAccount{
         $this->contract = $contract;
     }
 
+    public function getAddress() : string {
+        return $this->address;
+    }
+
     /**
      * @param callable $result
      */
