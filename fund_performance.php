@@ -35,7 +35,6 @@ $ob->getFundPerformace(function ($index) {
             echo "=== Total ".date("Y-m F", $index[$i - 1]["timestamp"]).": Sum of values ".number_format($currentMonth, 3)."% (".number_format($realMonth, 3)."%) / Compounded growth ".number_format($currentCompound * 100, 3)."% ===\n\n";
             $currentCompound = 1;
             $currentMonth = 0;
-            $realCompound = 1;
             $realMonth = 0;
         }
 

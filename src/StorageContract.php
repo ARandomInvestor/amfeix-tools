@@ -238,4 +238,24 @@ class StorageContract {
     public function getTxs($address, callable $return){
       $this->getAllValues([$this, "getTxCount"], [$this, "getTx"], $return, $address);
     }
+
+
+    /**
+     * Tries to obtain and decode contract ABI from public AMFEIX json webpack
+     * @param $url
+     * @throws \Exception
+     */
+    private function tryObtainContractABI($url){
+        $src = file_get_contents($url);
+        if(preg_match($d = "#abi:(\\[.+\\]),metadata#s", $src, $matches) > 0){
+            $json = preg_replace(["#:!0#", "#:!1#", "#([\\{,])([a-zA-Z0-9]+)([:])#"], [":true", ":false", '$1"$2"$3'], $matches[1]);
+            $data = json_decode($json, true);
+
+            if(!is_array($data)){
+                throw new \Exception("Unable to parse found ABI segment");
+            }
+        }
+
+        throw new \Exception("Unable to find ABI segment");
+    }
 }
