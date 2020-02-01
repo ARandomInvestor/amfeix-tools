@@ -15,6 +15,8 @@ class StorageContract {
     private $btc;
     private $debug = false;
 
+    private $cache = [];
+
     public function __construct(Provider $provider, BitcoinProvider $btc = null) {
         $ContractMeta = json_decode(file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . "abi" . DIRECTORY_SEPARATOR . self::STORAGE_CONTRACT_ADDRESS . ".json"));
         $this->contract = new Contract($provider, $ContractMeta);
@@ -39,6 +41,18 @@ class StorageContract {
         return $n->copy()->bitwise_and($mask)->multiply(new BigInteger(-1))->add($n->copy()->bitwise_and($mask->copy()->bitwise_not()));
     }
 
+    public function clearCache(){
+        $this->cache = [];
+    }
+
+    protected function getCache($k){
+        return (isset($this->cache[$k]) and $this->cache[$k][1] >= time()) ? $this->cache[$k][0] : null;
+    }
+
+    protected function setCache($k, $v, $age = 15){
+        $this->cache[$k] = [$v, time() + $age];
+    }
+
 
     /**
      * Returned performance values include 20% performance fee applied
@@ -49,6 +63,12 @@ class StorageContract {
         if($this->debug){
             echo "Fetching AMFEIX Performance Index\n";
         }
+
+        if(($cache = $this->getCache("getFundPerformace")) !== null){
+            $return($cache);
+            return;
+        }
+
         $this->contract->call("getAll", function ($err, $values) use ($return) {
             if ($err !== null) {
                 throw $err;
@@ -59,8 +79,10 @@ class StorageContract {
             $performances = $values["a"];
             $index = [];
             foreach ($dates as $i => $date) {
-                $index[] = ["timestamp" => (int)$date->toString(), "value" => self::getComplement($performances[$i], 256)->toString() / 100000000];
+                $index[] = ["timestamp" => (int)$date->toString(), "value" => bcdiv(self::getComplement($performances[$i], 256)->toString(), 100000000, 2)];
             }
+
+            $this->setCache("getFundPerformace", $index);
 
             $return($index);
         });
@@ -73,11 +95,20 @@ class StorageContract {
         if($this->debug){
             echo "Fetching AMFEIX AUM\n";
         }
+
+        if(($cache = $this->getCache("getAUM")) !== null){
+            $return($cache);
+            return;
+        }
+
         $this->contract->call("aum", function ($err, $values) use ($return) {
             if ($err !== null) {
                 throw $err;
             }
             /** @var BigInteger[] $values */
+
+            $this->setCache("getAUM", $values[0]->toString());
+
             $return($values[0]->toString());
         });
     }
@@ -91,13 +122,22 @@ class StorageContract {
         if($this->debug){
             echo "Fetching all investor addresses\n";
         }
-      $this->contract->call("getAllInvestors", function ($err, $values) use ($return) {
-          if ($err !== null) {
-              throw $err;
-          }
-          /** @var string[] $values */
-          $return($values);
-      });
+
+        if(($cache = $this->getCache("getInvestors")) !== null){
+            $return($cache);
+            return;
+        }
+
+        $this->contract->call("getAllInvestors", function ($err, $values) use ($return) {
+            if ($err !== null) {
+                throw $err;
+            }
+            /** @var string[] $values */
+
+            $this->setCache("getInvestors", $values);
+
+            $return($values);
+        });
     }
 
     private function getAllValues(callable $count, callable $getter, callable $result, ...$args) {
@@ -123,12 +163,20 @@ class StorageContract {
      * @param callable $return
      */
     public function getDepositAddressCount(callable $return) {
+        if(($cache = $this->getCache("getDepositAddressCount")) !== null){
+            $return($cache);
+            return;
+        }
+
         $this->contract->call("fundDepositAddressesLength", function ($err, $values) use ($return) {
             if ($err !== null) {
                 throw $err;
             }
 
             /** @var BigInteger[] $values */
+
+            $this->setCache("getDepositAddressCount", $values[0]->toString());
+
             $return($values[0]->toString());
         });
     }
@@ -141,7 +189,13 @@ class StorageContract {
         if($this->debug){
             echo "Fetching deposit address $n\n";
         }
-        $this->contract->call("fundDepositAddresses", $n, function ($err, $values) use ($return) {
+
+        if(($cache = $this->getCache("getDepositAddress{".$n."}")) !== null){
+            $return($cache);
+            return;
+        }
+
+        $this->contract->call("fundDepositAddresses", $n, function ($err, $values) use ($n, $return) {
             if ($err !== null) {
                 throw $err;
             }
@@ -151,6 +205,9 @@ class StorageContract {
             if($this->debug){
                 echo "Deposit address ".$values[0]."\n";
             }
+
+            $this->setCache("getDepositAddress{".$n."}", $values[0]);
+
             $return($values[0]);
         });
     }

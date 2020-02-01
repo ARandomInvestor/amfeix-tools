@@ -35,8 +35,12 @@ for($addr = 2; $addr < $argc; ++$addr){
     $investor = new \ARandomInvestor\AMFEIX\InvestorAccount($investorAddress, $ob);
     echo "Querying Investor Address $investorAddress\n";
 
-    $investor->getBalance(function ($balance) use($investor, &$balances){
+    $investor->getBalance(function ($balance) use($investor, &$balances, $argc){
         $balances[$investor->getAddress()] = $balance;
+        if($argc > 3){
+            echo "LIFETIME TOTAL / Initial Investment: BTC " . to_bitcoin($balance["total"]["initial"]) . " / Balance: BTC " . to_bitcoin($balance["total"]["balance"]) . " / growth: BTC " . to_bitcoin($balance["total"]["growth"]) . " / profit " . number_format($balance["total"]["yield"] * 100, 3) . "% / Performance fees (already deducted): BTC " . to_bitcoin($balance["total"]["fee"]) . "\n";
+            echo "CURRENT / Initial Investment: BTC " . to_bitcoin($balance["current"]["initial"]) . " / Balance: BTC " . to_bitcoin($balance["current"]["balance"]) . " / growth: BTC " . to_bitcoin($balance["current"]["growth"]) . " / profit " . number_format($balance["current"]["yield"] * 100, 3) . "% / Performance fees (already deducted): BTC " . to_bitcoin($balance["current"]["fee"]) . "\n\n";
+        }
     });
 }
 
