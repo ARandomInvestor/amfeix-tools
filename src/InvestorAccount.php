@@ -65,7 +65,7 @@ class InvestorAccount{
                 $tx["interest"] = $compoundedValue;
 
                 //Interest value includes 20% performance fee
-                if($tx["address"] === "referer"){
+                if($tx["signature"] === "referer"){
                     $tx["fee"] = 0;
                 }else{
                     $tx["fee"] = bcmul(bcdiv($compoundedValue, "0.8"), "0.2"); //TODO: make this correct. Performance fee is not applied when yield is <= 0
@@ -122,7 +122,7 @@ class InvestorAccount{
                             $lastInvestment = [$tx, 0];
                         }
 
-                        if($tx["address"] === "referer"){
+                        if($tx["signature"] === "referer"){
                             $compoundedValue = bcdiv(bcsub(bcmul($tx["interest"], $tx["value"]), $tx["value"]), 10); //TODO: why is this not ((profit) / 0.8) * 0.1
                             if((0 === strncmp('-', (string) $compoundedValue, 1))){
                                 //TODO: AMFEIX BUG If overall result is negative, value is positive instead???
@@ -133,6 +133,7 @@ class InvestorAccount{
                             if($tx["exit_timestamp"] === PHP_INT_MAX){ //Not exited yet
                                 $currentCompounded = bcadd($currentCompounded, $compoundedValue);
                             }
+                            $tx["referral_value"] = $tx["value"];
                             $tx["value"] = 0;
                         }else{
                             $compoundedValue = bcmul($tx["interest"], $tx["value"]);

@@ -66,7 +66,7 @@ $totalIndex = [];
 foreach ($balances as $address => $balance){
     foreach ($balance["transactions"] as $tx){
         echo "\n";
-        echo "tx " . $tx["txid"] ." @ " . date("Y-m-d H:i:s", $tx["timestamp"]) . " / ".($tx["address"] === "referer" ? "REFERRAL" : "BTC " . to_bitcoin($tx["value"])) . ($tx["exit_timestamp"] !== PHP_INT_MAX ? " / WITHDRAWN" : "") ."\n";
+        echo "tx " . $tx["txid"] ." @ " . date("Y-m-d H:i:s", $tx["timestamp"]) . " / ".($tx["signature"] === "referer" ? "REFERRAL BTC " . to_bitcoin($tx["referral_value"]) : "BTC " . to_bitcoin($tx["value"])) . ($tx["exit_timestamp"] !== PHP_INT_MAX ? " / WITHDRAWN" : "") ."\n";
         if ($tx["last_interest"] === null) {
             continue;
         }

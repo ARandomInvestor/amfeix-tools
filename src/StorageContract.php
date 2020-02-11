@@ -132,11 +132,11 @@ class StorageContract {
             if ($err !== null) {
                 throw $err;
             }
-            /** @var string[] $values */
+            /** @var string[][] $values */
 
-            $this->setCache("getInvestors", $values);
+            $this->setCache("getInvestors", $values[0]);
 
-            $return($values);
+            $return($values[0]);
         });
     }
 
@@ -283,7 +283,7 @@ class StorageContract {
                 throw $err;
             }
 
-            $tx = ["txid" => $values[0], "pubkey" => $values[1], "address" => $values[2], "action" => $values[3]->toString(), "timestamp" => $values[4]->toString(),];
+            $tx = ["txid" => $values[0], "pubkey" => $values[1], "signature" => $values[2], "action" => $values[3]->toString(), "timestamp" => $values[4]->toString(),];
 
             if($this->debug){
                 echo "Fetched tx " . ($tx["action"] == 0 ? "IN " : ($tx["action"] == 1 ? "OUT" : "UNKNOWN")) . " ".  $tx["txid"] . " @ " . date("Y-m-d H:i:s", $tx["timestamp"]) ."\n";
