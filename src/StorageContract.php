@@ -296,6 +296,49 @@ class StorageContract {
       $this->getAllValues([$this, "getTxCount"], [$this, "getTx"], $return, $address);
     }
 
+    /**
+     * @param string $address
+     * @param callable $return
+     */
+    public function getWithdrawRequestCount(string $address, callable $return) {
+        $this->contract->call("rtx", $address, function ($err, $values) use ($return) {
+            if ($err !== null) {
+                throw $err;
+            }
+
+            /** @var BigInteger[] $values */
+            $return($values[0]->toString());
+        });
+    }
+
+    /**
+     * @param string $address
+     * @param int $n Transaction number to get
+     * @param callable $return
+     */
+    public function getWithdrawRequest(string $address, int $n, callable $return) {
+
+        if($this->debug){
+            echo "Fetching transaction $n for address ".$address."\n";
+        }
+        $this->contract->call("reqWD", $address, $n, function ($err, $values) use ($return) {
+            if ($err !== null) {
+                throw $err;
+            }
+
+            $rtx = ["txid" => $values["txId"], "pubkey" => $values["pubKey"], "signature" => $values["signature"], "action" => $values["action"]->toString(), "timestamp" => $values["timestamp"]->toString(), "referal" => $values["referal"],];
+
+            if($this->debug){
+                echo "Fetched rtx " . ($rtx["action"] == 0 ? "IN " : ($rtx["action"] == 1 ? "OUT" : "UNKNOWN")) . " ".  $rtx["txid"] . " @ " . date("Y-m-d H:i:s", $rtx["timestamp"]) ."\n";
+            }
+            $return($rtx);
+        });
+    }
+
+    public function getWithdrawRequests($address, callable $return){
+        $this->getAllValues([$this, "getWithdrawRequestCount"], [$this, "getWithdrawRequest"], $return, $address);
+    }
+
 
     /**
      * Tries to obtain and decode contract ABI from public AMFEIX json webpack

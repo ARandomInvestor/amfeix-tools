@@ -32,8 +32,37 @@ class InvestorAccount{
                 }
             }
 
-            $result($txs);
+
+            $this->contract->getWithdrawRequests($this->address, function ($values) use ($result, $txs) {
+                foreach ($values as $rtx){
+                    if(isset($txs[$rtx["txid"]])){
+                        $t =& $txs[$rtx["txid"]];
+                        //Verify it all matches with original
+                        if(
+                            isset($t["requested_exit"])
+                            or $rtx["pubkey"] !== $t["pubkey"]
+                            //TODO: check why this is not used. or $rtx["signature"] !== $t["signature"]
+                            //or $rtx["referal"] !== $t["referal"]
+                        ){
+                            if(!isset($t["invalid_rtx"])){
+                                $t["invalid_rtx"] = [];
+                            }
+                            $t["invalid_rtx"][] = $rtx;
+                        }else{
+                            $t["requested_exit"] = $rtx["timestamp"];
+                        }
+                    }else{
+                        echo "WARNING: found unmatched rtx for " . $this->address ."\n";
+                        var_dump($rtx);
+                        echo "\n";
+
+                    }
+                }
+
+                $result($txs);
+            });
         });
+
     }
 
     /**
@@ -75,6 +104,8 @@ class InvestorAccount{
             $result($txs);
 
         });
+
+
     }
 
     /**

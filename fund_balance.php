@@ -66,7 +66,19 @@ $totalIndex = [];
 foreach ($balances as $address => $balance){
     foreach ($balance["transactions"] as $tx){
         echo "\n";
-        echo "tx " . $tx["txid"] ." @ " . date("Y-m-d H:i:s", $tx["timestamp"]) . " / ".($tx["signature"] === "referer" ? "REFERRAL BTC " . to_bitcoin($tx["referral_value"]) : "BTC " . to_bitcoin($tx["value"])) . ($tx["exit_timestamp"] !== PHP_INT_MAX ? " / WITHDRAWN" : "") ."\n";
+        echo "tx " . $tx["txid"] ." @ " . date("Y-m-d H:i:s", $tx["timestamp"]) . " / ".($tx["signature"] === "referer" ? "REFERRAL BTC " . to_bitcoin($tx["referral_value"]) : "BTC " . to_bitcoin($tx["value"])) . ($tx["exit_timestamp"] !== PHP_INT_MAX ? " / WITHDRAWN" : (isset($tx["requested_exit"]) ? " / REQUESTED WITHDRAWN @ " . date("Y-m-d H:i:s", $tx["requested_exit"]) : "")) ."\n";
+        if(isset($tx["invalid_rtx"])){
+            foreach ($tx["invalid_rtx"] as $t){
+                echo " \tfound invalid rtx: " . date("Y-m-d H:i:s", $t["timestamp"]) . " / ". $t["signature"] . " / " . $t["pubkey"] . "\n";
+                if($t["pubkey"] !== $tx["pubkey"]){
+                    echo " \tdifferent pubkey\n";
+                }
+            }
+
+            if(isset($tx["requested_exit"])){
+                echo " \talready has a withdraw request\n";
+            }
+        }
         if ($tx["last_interest"] === null) {
             continue;
         }
