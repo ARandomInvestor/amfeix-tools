@@ -3,6 +3,8 @@ AMFEIX Tools
 
 **DISCLAIMER**: This is a community project and is not part of AMFEIX or supported by them. You should NOT use any kind of private key or seeds here. These tools work using public Ethereum network contracts and information, and do not need them.
 
+You should also not run this code on any computer or network that you might use for accessing AMFEIX or other cryptocurrencies. Better be safe.
+
 ![NEVER GIVE ANYONE YOUR SEED KEYS](https://i.imgur.com/iaTou8c.png)
 
 ## Requirements
