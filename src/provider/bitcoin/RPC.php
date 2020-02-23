@@ -14,7 +14,7 @@ class RPC implements BitcoinProvider{
 
     public function getTransaction(string $txid) : ?array{
         //TODO: make this more compatible with other outputs
-        $tx = $this->client->getrawtransaction($txid, true)->toArray();
+        $tx = $this->client->getrawtransaction($txid, 1)->toArray();
         $tx["inputs"] = $tx["vin"];
         $tx["out"] = $tx["vout"];
         $tx["ver"] = $tx["version"];
