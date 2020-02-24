@@ -20,7 +20,7 @@ class RPC implements BitcoinProvider{
         $tx["ver"] = $tx["version"];
         $tx["lock_time"] = $tx["locktime"];
         foreach ($tx["out"] as &$output){
-            $output["value"] = (int) to_satoshi($output["value"]);
+            $output["value"] = $output["value"];
             $output["addr"] = $output["scriptPubKey"]["addresses"][0];
         }
 
